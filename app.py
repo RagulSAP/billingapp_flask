@@ -357,7 +357,7 @@ def get_org_info_by_user(user_uid):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        print("user_uid : ", user_uid)
+
         
         cursor.execute("""
             SELECT oi.org_name, oi.org_address, oi.org_phone, oi.org_gst, oi.org_fssai 
@@ -399,14 +399,16 @@ def dashboard_insights_overview():
         from_date = request.args.get('from_date')
         to_date = request.args.get('to_date')
         manager_id = request.args.get('manager_id')
-        
+      
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
+        # Always use date filter if provided, otherwise default to today
         if from_date and to_date:
             date_condition = "DATE(c.order_created_at) BETWEEN %s AND %s"
             params = [from_date, to_date]
         else:
+            # Default to today's data (Asia/Kolkata timezone)
             current_date = datetime.now(ist).date()
             date_condition = "DATE(c.order_created_at) = %s"
             params = [current_date]
@@ -442,7 +444,13 @@ def dashboard_insights_overview():
         return jsonify({
             "success": True, 
             "data": {
-                "overview": overview
+                "overview": overview,
+                "debug": {
+                    "from_date": from_date,
+                    "to_date": to_date,
+                    "manager_id": manager_id,
+                    "params": params
+                }
             }
         })
     except Exception as e:
